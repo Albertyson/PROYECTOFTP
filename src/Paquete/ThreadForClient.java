@@ -6,14 +6,19 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ThreadForClient extends Thread {
 
     private Socket s;
     public File currentDir;
+    public ArrayList<User> usersList;
+    boolean connected;
+    String userName;
 
-    public ThreadForClient(Socket s) {
+    public ThreadForClient(Socket s, ArrayList<User> usersList) {
         this.s = s;
+        this.usersList = usersList;
     }
 
     public void run() {
@@ -43,10 +48,10 @@ public class ThreadForClient extends Thread {
             out.println("MFMT");
             out.println("211 End");
             out.println("230 OK. Current directory is /");
-            boolean connected = true;
+            connected = true;
             while (connected) {
                 fromClient = in.readLine();
-                System.out.println("From client: " + fromClient);
+                System.out.println("From client "+userName+": " + fromClient);
                 if (fromClient != null) {
                     if (fromClient.equals("BYE")) {
                         out.println("Bye Client\r\n");
@@ -83,6 +88,31 @@ public class ThreadForClient extends Thread {
 
         switch (args[0].toUpperCase()) {
 
+            case "USER":
+                if (usernameExists(args[1])) {
+                    out.println("Username exists\r\n");
+                } else {
+                    out.println("Username doesn't exist\r\n");
+                    out.println("QUIT\r\n");
+                    out.flush();
+                  // connected = false;
+                }
+                break;
+            case "PASS":
+                String pass=args[1];
+                if(args[1]==null){
+                    pass="";
+                }
+                if (isValidPassword(pass)) {
+                    out.println("Logged in\r\n");
+                    currentDir = new File("/ftp/data/"+userName+"/");
+                } else {
+                    out.println("Invalid password\r\n");
+                    out.println("QUIT\r\n");
+                    out.flush();
+                 //   connected = false;
+                }
+                break;
             case "MKDIR":
                 createDirectory(out, args[1]);
                 break;
@@ -207,4 +237,24 @@ public class ThreadForClient extends Thread {
         }
     }
 
+    public boolean usernameExists(String username) {
+        for (int i = 0; i < usersList.size(); i++) {
+            if (usersList.get(i).getUsername().equals(username)) {
+                userName = username;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isValidPassword(String password) {
+        for (int i = 0; i < usersList.size(); i++) {
+            if (usersList.get(i).getUsername().equals(userName)) {
+                if (usersList.get(i).getPassword().equals(password)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
