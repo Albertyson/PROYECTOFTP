@@ -222,6 +222,25 @@ public class ThreadForClient extends Thread {
     }
 
     private void getFile(PrintWriter out, String fileName) {
+        try {
+			BufferedReader br = new BufferedReader(
+				new FileReader( fileName ) ) ;
+			out.println("OK") ;
+			out.flush() ;
+			
+			String s ;
+			while ( (s=br.readLine())!=null)
+			{
+				out.println(s) ;
+			}
+		}
+		catch (FileNotFoundException fnf)
+		{
+			out.println("NO: file not found.") ;
+			out.flush() ;
+		}
+		catch (IOException ioe)
+		{ }
     }
 
     //recursivo para eliminar contenido interior de una carpeta
